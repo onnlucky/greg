@@ -432,6 +432,8 @@ typedef struct _GREG {\n\
   int buflen;\n\
   int   offset;\n\
   int   pos;\n\
+  int   maxpos;\n\
+  int   maxline;\n\
   int   limit;\n\
   char *text;\n\
   int   textlen;\n\
@@ -464,6 +466,7 @@ YY_LOCAL(int) yyrefill(GREG *G)\n\
 YY_LOCAL(int) yymatchDot(GREG *G)\n\
 {\n\
   if (G->pos >= G->limit && !yyrefill(G)) return 0;\n\
+  if (G->buf[G->pos] == '\\n' && G->maxpos < G->pos) { G->maxpos = G->pos; G->maxline++; }\n\
   ++G->pos;\n\
   return 1;\n\
 }\n\
@@ -473,6 +476,7 @@ YY_LOCAL(int) yymatchChar(GREG *G, int c)\n\
   if (G->pos >= G->limit && !yyrefill(G)) return 0;\n\
   if ((unsigned char)G->buf[G->pos] == c)\n\
     {\n\
+      if (G->buf[G->pos] == '\\n' && G->maxpos < G->pos) { G->maxpos = G->pos; G->maxline++; }\n\
       ++G->pos;\n\
       yyprintf((stderr, \"  ok   yymatchChar(%c) @ %s\\n\", c, G->buf+G->pos));\n\
       return 1;\n\
@@ -493,6 +497,7 @@ YY_LOCAL(int) yymatchString(GREG *G, const char *s)\n\
           return 0;\n\
         }\n\
       ++s;\n\
+      if (G->buf[G->pos] == '\\n' && G->maxpos < G->pos) { G->maxpos = G->pos; G->maxline++; }\n\
       ++G->pos;\n\
     }\n\
   return 1;\n\
@@ -505,6 +510,7 @@ YY_LOCAL(int) yymatchClass(GREG *G, unsigned char *bits)\n\
   c= (unsigned char)G->buf[G->pos];\n\
   if (bits[c >> 3] & (1 << (c & 7)))\n\
     {\n\
+      if (G->buf[G->pos] == '\\n' && G->maxpos < G->pos) { G->maxpos = G->pos; G->maxline++; }\n\
       ++G->pos;\n\
       yyprintf((stderr, \"  ok   yymatchClass @ %s\\n\", G->buf+G->pos));\n\
       return 1;\n\
